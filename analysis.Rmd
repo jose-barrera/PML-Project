@@ -1,0 +1,89 @@
+---
+title: "HAR: Prediction model for barbell lifts performance analysis"
+author: "José Luis Barrera Canto"
+date: "Sunday, April 26, 2015"
+output: html_document
+---
+
+#### BACKGROUND
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information and data are available from the website here: [http://groupware.les.inf.puc-rio.br/har](http://groupware.les.inf.puc-rio.br/har) (see the section on the Weight Lifting Exercise Dataset).
+
+Setting knitr options and libraries needed.
+``` {r echo=TRUE, warning=FALSE, warning=FALSE, message=FALSE}
+require(caret)
+require(randomForest)
+```
+
+#### 1. Data loading
+
+The training data for this project are available here: 
+
+[https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv)
+
+The test data are available here: 
+
+[https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv)
+
+```{r cache=TRUE}
+filename <- "pml-training.csv"
+if (!file.exists(filename)) {
+        url <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+        download.file(url=url,destfile=filename)
+}
+training.data <- read.csv(filename, strip.white=TRUE, na.strings=c("NA","", "#DIV/0!"))
+
+filename <- "pml-testing.csv"
+if (!file.exists(filename)) {
+        url <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+        download.file(url=url,destfile=filename)
+}
+testing.data <- read.csv(filename, strip.white=TRUE, na.strings=c("NA","", "#DIV/0!"))
+```
+
+#### 2. Data subsetting and cleaning to identify predictors
+
+After some reviewing of data, I detected variables with many NA values, so the decision was to use as predictors only those columns without NA values. In fact, many of these variables are statistical measures (mean, min, max, var, std, etc.) based on their names, so they are not useful as predictors in this analysis. As a result, there are only 60 variables to work with.
+
+Also, I eliminate the information variables (id, user name, timestamp-related and windows). The final training set has 53 predictors.
+
+```{r cache=TRUE}
+training.data <- training.data[,which(colSums(is.na(training.data))==0)]
+training.data <- training.data[,8:60]
+```
+
+#### 3. Random Forests as model for prediction
+
+I use random forests algorithm to obtain the prediction model, using all variables as predictors of **Classe**. This selection was based on the high accuracy of this algorithm and the size of training data, despite its speed and possible overfitting.
+
+```{r cache=TRUE}
+model <- randomForest(classe~., data=training.data)
+print(model)
+```
+
+I observe from model obtained a very high accuracy, so the expection was to predict correctly the 20 test cases provided.
+
+#### 4. Predictions
+
+I use the same features for testing cases that were used to train the algorithm.
+
+```{r cache=TRUE}
+testing.data <- testing.data[,which(names(testing.data) %in% names(training.data))]
+
+predictions <- predict(model, testing.data)
+print(predictions)
+
+## Function provided to generate files to submit.
+
+pml_write_files = function(x) {
+        n = length(x)
+        for(i in 1:n){
+                filename = paste0("problem_id_",i,".txt")
+                write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+        }
+}
+
+pml_write_files(predictions)
+```
+
+The algorithm predicted correctly the 20 cases.
