@@ -54,14 +54,15 @@ training.data <- training.data[,8:60]
 
 #### 3. Random Forests as model for prediction
 
-I use random forests algorithm to obtain the prediction model, using all variables as predictors of **Classe**. This selection was based on the high accuracy of this algorithm and the size of training data, despite its speed and possible overfitting.
+I use random forests algorithm to obtain the prediction model, using all variables as predictors of **Classe**. This selection was based on the high accuracy of this algorithm and the size of training data, despite its speed and possible overfitting. Another issue is that with random forests there is no need for cross-validation or separate test to get an unbiased estimate of the test set error, it is estimated internally. [Source](https://www.stat.berkeley.edu/~breiman/RandomForests/cc_home.htm)
 
 ```{r cache=TRUE}
-model <- randomForest(classe~., data=training.data)
+set.seed(45733)
+model <- randomForest(classe~., data=training.data, importance=TRUE)
 print(model)
 ```
 
-I observe from model obtained a very high accuracy, so the expection was to predict correctly the 20 test cases provided.
+I observe from model obtained an OOB (out-of-bag) error estimate of 0.25%, so this implies a very high accuracy; the expection was to predict correctly the 20 test cases provided.
 
 #### 4. Predictions
 
@@ -69,7 +70,6 @@ I use the same features for testing cases that were used to train the algorithm.
 
 ```{r cache=TRUE}
 testing.data <- testing.data[,which(names(testing.data) %in% names(training.data))]
-
 predictions <- predict(model, testing.data)
 print(predictions)
 

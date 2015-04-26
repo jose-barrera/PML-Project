@@ -94,31 +94,31 @@ training.data &lt;- training.data[,8:60]</code></pre>
 </div>
 <div id="random-forests-as-model-for-prediction" class="section level4">
 <h4>3. Random Forests as model for prediction</h4>
-<p>I use random forests algorithm to obtain the prediction model, using all variables as predictors of <strong>Classe</strong>. This selection was based on the high accuracy of this algorithm and the size of training data, despite its speed and possible overfitting.</p>
-<pre class="r"><code>model &lt;- randomForest(classe~., data=training.data)
+<p>I use random forests algorithm to obtain the prediction model, using all variables as predictors of <strong>Classe</strong>. This selection was based on the high accuracy of this algorithm and the size of training data, despite its speed and possible overfitting. Another issue is that with random forests there is no need for cross-validation or separate test to get an unbiased estimate of the test set error, it is estimated internally. <a href="https://www.stat.berkeley.edu/~breiman/RandomForests/cc_home.htm">Source</a></p>
+<pre class="r"><code>set.seed(45733)
+model &lt;- randomForest(classe~., data=training.data, importance=TRUE)
 print(model)</code></pre>
 <pre><code>## 
 ## Call:
-##  randomForest(formula = classe ~ ., data = training.data) 
+##  randomForest(formula = classe ~ ., data = training.data, importance = TRUE) 
 ##                Type of random forest: classification
 ##                      Number of trees: 500
 ## No. of variables tried at each split: 7
 ## 
-##         OOB estimate of  error rate: 0.31%
+##         OOB estimate of  error rate: 0.25%
 ## Confusion matrix:
 ##      A    B    C    D    E  class.error
-## A 5577    2    0    0    1 0.0005376344
-## B   11 3783    3    0    0 0.0036871214
-## C    0   13 3407    2    0 0.0043834015
-## D    0    0   19 3195    2 0.0065298507
-## E    0    0    1    7 3599 0.0022179096</code></pre>
-<p>I observe from model obtained a very high accuracy, so the expection was to predict correctly the 20 test cases provided.</p>
+## A 5579    1    0    0    0 0.0001792115
+## B    9 3785    3    0    0 0.0031603898
+## C    0   10 3410    2    0 0.0035067212
+## D    0    0   18 3197    1 0.0059079602
+## E    0    0    2    4 3601 0.0016634322</code></pre>
+<p>I observe from model obtained an OOB (out-of-bag) error estimate of 0.25%, so this implies a very high accuracy; the expection was to predict correctly the 20 test cases provided.</p>
 </div>
 <div id="predictions" class="section level4">
 <h4>4. Predictions</h4>
 <p>I use the same features for testing cases that were used to train the algorithm.</p>
 <pre class="r"><code>testing.data &lt;- testing.data[,which(names(testing.data) %in% names(training.data))]
-
 predictions &lt;- predict(model, testing.data)
 print(predictions)</code></pre>
 <pre><code>##  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 
